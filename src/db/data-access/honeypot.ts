@@ -1,30 +1,33 @@
+import { and, eq } from "drizzle-orm";
 import { db } from "..";
-
-type HoneypotChannel = {
-    guild_id: string;
-    channel_id: string;
-};
+import { honeypotChannelsTable } from "../schema";
 
 export function createHoneypotChannel(guildId: string, channelId: string) {
-    return db
-        .query(
-            "INSERT INTO honeypot_channels (guild_id, channel_id) VALUES (?, ?)",
-        )
-        .run(guildId, channelId);
+    return db.insert(honeypotChannelsTable).values({ guildId, channelId });
 }
 
-export function getHoneypotChannel(guildId: string, channelId: string) {
-    return db
-        .query<HoneypotChannel, [string, string]>(
-            "SELECT * FROM honeypot_channels WHERE guild_id = ? AND channel_id = ? LIMIT 1;",
+export async function getHoneypotChannel(guildId: string, channelId: string) {
+    const [value] = await db
+        .select()
+        .from(honeypotChannelsTable)
+        .where(
+            and(
+                eq(honeypotChannelsTable.guildId, guildId),
+                eq(honeypotChannelsTable.channelId, channelId),
+            ),
         )
-        .get(guildId, channelId);
+        .limit(1);
+
+    return value;
 }
 
 export function removeHoneypotChannel(guildId: string, channelId: string) {
     return db
-        .query(
-            "DELETE FROM honeypot_channels WHERE guild_id = ? AND channel_id = ? LIMIT 1;",
-        )
-        .run();
+        .delete(honeypotChannelsTable)
+        .where(
+            and(
+                eq(honeypotChannelsTable.guildId, guildId),
+                eq(honeypotChannelsTable.channelId, channelId),
+            ),
+        );
 }

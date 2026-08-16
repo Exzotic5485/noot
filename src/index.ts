@@ -2,7 +2,6 @@ import { dirname, importx } from "@discordx/importer";
 import { IntentsBitField } from "discord.js";
 import { Client } from "discordx";
 import { ENV } from "./env";
-import { runMigrations } from "./db";
 
 export const client = new Client({
     intents: [
@@ -15,7 +14,6 @@ export const client = new Client({
 });
 
 async function run() {
-    runMigrations();
     await importx(`${dirname(import.meta.url)}/{events,commands}/**/*.{ts,js}`);
 
     await client.login(ENV.BOT_TOKEN);

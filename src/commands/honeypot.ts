@@ -60,14 +60,14 @@ export class HoneypotCommand {
             });
         }
 
-        if (getHoneypotChannel(interaction.guildId, channel.id)) {
+        if (await getHoneypotChannel(interaction.guildId, channel.id)) {
             return interaction.reply({
                 content: "Channel is already a honeypot channel!",
                 flags: MessageFlags.Ephemeral,
             });
         }
 
-        createHoneypotChannel(interaction.guildId, channel.id);
+        await createHoneypotChannel(interaction.guildId, channel.id);
 
         const container = new ContainerBuilder().addTextDisplayComponents(
             (textDisplay) =>
@@ -118,7 +118,7 @@ export class HoneypotCommand {
             });
         }
 
-        removeHoneypotChannel(interaction.guildId!, interaction.channelId);
+        await removeHoneypotChannel(interaction.guildId!, interaction.channelId);
 
         await interaction.reply({
             content: "Done!",
@@ -130,7 +130,7 @@ export class HoneypotCommand {
     async onMessage([message]: ArgsOf<Events.MessageCreate>, client: Client) {
         if (!message.inGuild() || message.member?.user.bot) return;
 
-        const honeypotChannel = getHoneypotChannel(
+        const honeypotChannel = await getHoneypotChannel(
             message.guildId,
             message.channelId,
         );

@@ -15,5 +15,5 @@
 
         "types": ["bun"]
     },
-    "exclude": ["build", "node_modules"]
+    "exclude": ["build", "node_modules", "drizzle.config.ts"]
 }

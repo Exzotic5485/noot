@@ -1,0 +1,45 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "733631a2-a166-4c3d-b186-23288cba96d5",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "ddl": [
+    {
+      "name": "honeypot_channels",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "guild_id",
+      "entityType": "columns",
+      "table": "honeypot_channels"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "channel_id",
+      "entityType": "columns",
+      "table": "honeypot_channels"
+    },
+    {
+      "columns": [
+        "guild_id",
+        "channel_id"
+      ],
+      "nameExplicit": false,
+      "name": "honeypot_channels_pk",
+      "entityType": "pks",
+      "table": "honeypot_channels"
+    }
+  ],
+  "renames": []
+}
