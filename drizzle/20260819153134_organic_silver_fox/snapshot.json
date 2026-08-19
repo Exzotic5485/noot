@@ -1,0 +1,245 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "e00fbb41-0aef-4d70-ab4c-6560edf70af6",
+  "prevIds": [
+    "733631a2-a166-4c3d-b186-23288cba96d5"
+  ],
+  "ddl": [
+    {
+      "name": "honeypot_channels",
+      "entityType": "tables"
+    },
+    {
+      "name": "mod_suggestions",
+      "entityType": "tables"
+    },
+    {
+      "name": "mod_suggestions_votes",
+      "entityType": "tables"
+    },
+    {
+      "name": "modpacks",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "guild_id",
+      "entityType": "columns",
+      "table": "honeypot_channels"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "channel_id",
+      "entityType": "columns",
+      "table": "honeypot_channels"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "mod_suggestions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "modpack_id",
+      "entityType": "columns",
+      "table": "mod_suggestions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "platform",
+      "entityType": "columns",
+      "table": "mod_suggestions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "platform_id",
+      "entityType": "columns",
+      "table": "mod_suggestions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "mod_suggestions"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "mod_id",
+      "entityType": "columns",
+      "table": "mod_suggestions_votes"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "table": "mod_suggestions_votes"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "vote",
+      "entityType": "columns",
+      "table": "mod_suggestions_votes"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "modpacks"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "guild_id",
+      "entityType": "columns",
+      "table": "modpacks"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "channel_id",
+      "entityType": "columns",
+      "table": "modpacks"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "modpacks"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "loader",
+      "entityType": "columns",
+      "table": "modpacks"
+    },
+    {
+      "columns": [
+        "modpack_id"
+      ],
+      "tableTo": "modpacks",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_mod_suggestions_modpack_id_modpacks_id_fk",
+      "entityType": "fks",
+      "table": "mod_suggestions"
+    },
+    {
+      "columns": [
+        "mod_id"
+      ],
+      "tableTo": "mod_suggestions",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_mod_suggestions_votes_mod_id_mod_suggestions_id_fk",
+      "entityType": "fks",
+      "table": "mod_suggestions_votes"
+    },
+    {
+      "columns": [
+        "guild_id",
+        "channel_id"
+      ],
+      "nameExplicit": false,
+      "name": "honeypot_channels_pk",
+      "entityType": "pks",
+      "table": "honeypot_channels"
+    },
+    {
+      "columns": [
+        "mod_id",
+        "user_id"
+      ],
+      "nameExplicit": false,
+      "name": "mod_suggestions_votes_pk",
+      "entityType": "pks",
+      "table": "mod_suggestions_votes"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "mod_suggestions_pk",
+      "table": "mod_suggestions",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "modpacks_pk",
+      "table": "modpacks",
+      "entityType": "pks"
+    }
+  ],
+  "renames": []
+}
