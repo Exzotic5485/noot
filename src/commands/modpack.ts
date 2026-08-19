@@ -8,7 +8,6 @@ import {
     InteractionContextType,
     MessageFlags,
     PermissionFlagsBits,
-    TextDisplayComponent,
     type ButtonInteraction,
     type CommandInteraction,
 } from "discord.js";
@@ -88,6 +87,15 @@ export class ModpackCommand {
             });
         }
 
+        const loader = LOADERS[loaderOption];
+
+        if (!loader) {
+            return interaction.reply({
+                content: `${loaderOption} is not a valid loader.`,
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+
         await createModpack(
             interaction.guildId,
             channel.id,
@@ -106,11 +114,11 @@ export class ModpackCommand {
                 section
                     .addTextDisplayComponents((textDisplay) =>
                         textDisplay.setContent(
-                            "## Mod Loader: Fabric\nVersion: 1.20.2"
+                            `## Mod Loader: ${loader.name}\nVersion: ${versionOption}`
                         )
                     )
                     .setThumbnailAccessory((thumbnail) =>
-                        thumbnail.setURL(LOADERS[loaderOption].logoUrl)
+                        thumbnail.setURL(loader.logoUrl)
                     )
             )
             .addActionRowComponents((actionRow) =>
