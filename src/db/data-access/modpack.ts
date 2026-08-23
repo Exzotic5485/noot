@@ -26,6 +26,19 @@ export async function getActiveModpack(guildId: string) {
         .get();
 }
 
+export function getActiveModpackByChannel(guildId: string, channelId: string) {
+    return db
+        .select()
+        .from(modpacksTable)
+        .where(
+            and(
+                eq(modpacksTable.guildId, guildId),
+                eq(modpacksTable.channelId, channelId)
+            )
+        )
+        .get();
+}
+
 export async function createModSuggestion(
     modpackId: string,
     userId: string,

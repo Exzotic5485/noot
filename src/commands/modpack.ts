@@ -5,15 +5,21 @@ import {
     ButtonStyle,
     ComponentType,
     ContainerBuilder,
+    Events,
     InteractionContextType,
     MessageFlags,
     PermissionFlagsBits,
     type ButtonInteraction,
     type CommandInteraction,
+    type SendableChannels,
+    type User,
 } from "discord.js";
 import {
+    ArgsOf,
     ButtonComponent,
+    Client,
     Discord,
+    On,
     Slash,
     SlashChoice,
     SlashGroup,
@@ -25,13 +31,15 @@ import {
     createModpack,
     createModSuggestion,
     getActiveModpack,
+    getActiveModpackByChannel,
     getModSuggestion,
     getModSuggestionVote,
     voteSuggestion,
 } from "../db/data-access/modpack";
+import { ModVote, type Modpack } from "../db/schema";
+import { MessageSafeError } from "../lib/errors";
 import { LOADERS } from "../lib/modpack/loaders";
 import { getPlatformFromUrl } from "../lib/modpack/platforms";
-import { ModVote } from "../db/schema";
 
 const VOTE_TEXT_COMPONENT_ID = 99;
 const VOTE_BUTTON_REGEX = /(upvote|downvote)_(.+)/;
@@ -165,8 +173,10 @@ export class ModpackCommand {
         urlOption: SlashOptionResult[ApplicationCommandOptionType.String],
         interaction: CommandInteraction
     ) {
-        if (!interaction.inGuild() || !interaction.channel?.isSendable())
+        if (!interaction.inGuild() || !interaction.channel?.isTextBased())
             return;
+
+        interaction.channel;
 
         const modpack = await getActiveModpack(interaction.guildId);
 
@@ -178,84 +188,12 @@ export class ModpackCommand {
             });
         }
 
-        const platform = getPlatformFromUrl(urlOption);
-
-        if (!platform) {
-            return interaction.reply({
-                content:
-                    "Invalid url. Only urls from modrinth.com & curseforge.com are supported.",
-                flags: [MessageFlags.Ephemeral],
-            });
-        }
-
-        const modId = platform.parseModId(urlOption);
-
-        if (!modId) {
-            return interaction.reply({
-                content:
-                    "Failed to find the mod id in the url provided. Please make sure you have provided a valid mod url",
-                flags: [MessageFlags.Ephemeral],
-            });
-        }
-
-        const mod = await platform.resolveMod(modId);
-
-        if (!mod) {
-            return interaction.reply({
-                content:
-                    "Failed to resolve mod. Please make sure the mod is valid and try again.",
-                flags: [MessageFlags.Ephemeral],
-            });
-        }
-
-        const modSuggestion = await createModSuggestion(
-            modpack.id,
-            interaction.user.id,
-            platform.id,
-            modId
+        await this.suggestHandler(
+            modpack,
+            urlOption,
+            interaction.channel,
+            interaction.user
         );
-
-        const container = new ContainerBuilder()
-            .addSectionComponents((section) =>
-                section
-                    .addTextDisplayComponents((textDisplay) =>
-                        textDisplay.setContent(
-                            `# [${mod.title}](${mod.url})\n${mod.description}\n\n\n*Mod suggested by ${interaction.user}*`
-                        )
-                    )
-                    .setThumbnailAccessory((thumbnail) =>
-                        thumbnail.setURL(mod.iconUrl)
-                    )
-            )
-            .addSeparatorComponents((separator) => separator)
-            .addTextDisplayComponents((textDisplay) =>
-                textDisplay.setContent(this.getVoteTextContext(0, 0)).setId(99)
-            )
-            .addActionRowComponents((actionRow) =>
-                actionRow.setComponents(
-                    new ButtonBuilder()
-                        .setLabel("Upvote")
-                        .setEmoji("⬆️")
-                        .setStyle(ButtonStyle.Success)
-                        .setCustomId(`upvote_${modSuggestion.id}`),
-                    new ButtonBuilder()
-                        .setLabel("Downvote")
-                        .setEmoji("⬇️")
-                        .setStyle(ButtonStyle.Danger)
-                        .setCustomId(`downvote_${modSuggestion.id}`),
-                    new ButtonBuilder()
-                        .setLabel("Mod Link")
-                        .setURL(mod.url)
-                        .setStyle(ButtonStyle.Link)
-                )
-            );
-
-        const message = await interaction.channel.send({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-        });
-
-        await message.startThread({ name: mod.title });
 
         await interaction.reply({
             content: `Mod suggested!`,
@@ -341,6 +279,133 @@ export class ModpackCommand {
                 flags: MessageFlags.IsComponentsV2,
             });
         }
+    }
+
+    @On({ event: Events.MessageCreate })
+    async onMessage([message]: ArgsOf<Events.MessageCreate>, client: Client) {
+        if (
+            !message.inGuild() ||
+            message.channel.isThread() ||
+            message.author.bot
+        )
+            return;
+
+        const modpack = getActiveModpackByChannel(
+            message.guildId,
+            message.channelId
+        );
+
+        if (!modpack) return;
+
+        try {
+            await this.suggestHandler(
+                modpack,
+                message.content,
+                message.channel,
+                message.author
+            );
+        } catch (e) {
+            if (e instanceof MessageSafeError) {
+                const errorMessage = await message.channel.send({
+                    content: e.message,
+                });
+
+                setTimeout(
+                    () =>
+                        errorMessage
+                            .delete()
+                            .catch((e) =>
+                                console.log(
+                                    `Failed to delete suggest error message`,
+                                    e
+                                )
+                            ),
+                    5000
+                );
+            }
+        }
+
+        await message.delete();
+    }
+
+    async suggestHandler(
+        modpack: Modpack,
+        url: string,
+        channel: SendableChannels,
+        user: User
+    ) {
+        const platform = getPlatformFromUrl(url);
+
+        if (!platform) {
+            throw new MessageSafeError(
+                "Invalid url. Only urls from modrinth.com & curseforge.com are supported."
+            );
+        }
+
+        const modId = platform.parseModId(url);
+
+        if (!modId) {
+            throw new MessageSafeError(
+                "Failed to find the mod id in the url provided. Please make sure you have provided a valid mod url"
+            );
+        }
+
+        const mod = await platform.resolveMod(modId);
+
+        if (!mod) {
+            throw new MessageSafeError(
+                "Failed to resolve mod. Please make sure the mod is valid and try again."
+            );
+        }
+
+        const modSuggestion = await createModSuggestion(
+            modpack.id,
+            user.id,
+            platform.id,
+            modId
+        );
+
+        const container = new ContainerBuilder()
+            .addSectionComponents((section) =>
+                section
+                    .addTextDisplayComponents((textDisplay) =>
+                        textDisplay.setContent(
+                            `# [${mod.title}](${mod.url})\n${mod.description}\n\n\n*Mod suggested by ${user}*`
+                        )
+                    )
+                    .setThumbnailAccessory((thumbnail) =>
+                        thumbnail.setURL(mod.iconUrl)
+                    )
+            )
+            .addSeparatorComponents((separator) => separator)
+            .addTextDisplayComponents((textDisplay) =>
+                textDisplay.setContent(this.getVoteTextContext(0, 0)).setId(99)
+            )
+            .addActionRowComponents((actionRow) =>
+                actionRow.setComponents(
+                    new ButtonBuilder()
+                        .setLabel("Upvote")
+                        .setEmoji("⬆️")
+                        .setStyle(ButtonStyle.Success)
+                        .setCustomId(`upvote_${modSuggestion.id}`),
+                    new ButtonBuilder()
+                        .setLabel("Downvote")
+                        .setEmoji("⬇️")
+                        .setStyle(ButtonStyle.Danger)
+                        .setCustomId(`downvote_${modSuggestion.id}`),
+                    new ButtonBuilder()
+                        .setLabel("Mod Link")
+                        .setURL(mod.url)
+                        .setStyle(ButtonStyle.Link)
+                )
+            );
+
+        const message = await channel.send({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+        });
+
+        await message.startThread({ name: mod.title });
     }
 
     getVoteTextContext(upvotes: number, downvotes: number) {
