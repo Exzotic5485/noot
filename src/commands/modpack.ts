@@ -65,7 +65,7 @@ export class ModpackCommand {
             type: ApplicationCommandOptionType.Channel,
         })
         channelOption: SlashOptionResult[ApplicationCommandOptionType.Channel],
-        @SlashChoice("fabric", "forge")
+        @SlashChoice(...Object.keys(LOADERS))
         @SlashOption({
             description: "the mod loader",
             name: "loader",
